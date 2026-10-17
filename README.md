@@ -49,9 +49,3 @@ python src/check.py     # optional: sanity checks
 python score.py --predictions validation_predictions.csv --december-predictions data/december_chart_inputs.csv
 ```
 `train.py` overwrites `data/december_chart_inputs.csv` with the predicted rates. `score.py` writes `scorer_results/candidate_december.png`.
-
-## Limitations
-- Nov-Dec is outside the training period; holidays or market shocks are not modelled.
-- The time trend is assumed linear; if it reverses (as in Jul-Aug) errors grow.
-- The business meaning of `quote_signal` is unknown to me; it is used because it improves time-ordered validation.
-- Some coordinates look inaccurate and are used as provided.
