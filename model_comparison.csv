@@ -1,0 +1,6 @@
+"Model (mean % error, clean rows)",May-Jun,Jul-Aug,Sep-Oct,Average
+Same price per mile for everyone,9.9%,9.1%,9.3%,9.4%
+Price per mile by equipment,9.0%,8.1%,8.1%,8.4%
+Linear layer only,9.5%,13.5%,9.1%,10.7%
+Trees only (with day count),3.3%,5.0%,2.6%,3.7%
+Hybrid (chosen),3.0%,5.2%,2.2%,3.5%

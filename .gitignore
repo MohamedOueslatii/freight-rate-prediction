@@ -1,0 +1,7 @@
+.venv/
+__pycache__/
+*.pyc
+# company data is not committed; see README for where to place it
+data/*.csv
+!data/.gitkeep
+ 
