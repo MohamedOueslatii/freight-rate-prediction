@@ -11,6 +11,7 @@ T0 = pd.Timestamp("2025-01-01")
 # Label-outlier band on rate-per-mile. The train rpm histogram has a clear gap:
 # ~98.6% of loads lie in [1.2, 4.0]; the rest are x0.2-0.5 or x3-6 corrupted rates.
 RPM_LO, RPM_HI = 1.2, 4.0
+DIST_OUTLIER = 0.15   # a distance more than 15% away from its lane median is treated as an error
 
 
 def load(path):
@@ -21,8 +22,12 @@ def build(frames, cities=None):
     """frames: dict name -> DataFrame (same schema, label optional). Returns one frame with a 'src' col."""
     al = pd.concat([f.assign(src=k) for k, f in frames.items()], ignore_index=True)
     al["lane"] = al.pickup + ">" + al.delivery
-    # distance has sporadic errors (e.g. 70 mi for a 7 mi haversine pair): use the lane median
-    al["lane_dist"] = al.groupby("lane").distance.transform("median")
+    # A load's own distance carries real price information (rate follows it, slope ~0.86 in the data),
+    # so keep it. Only replace it by the lane median when it is clearly wrong (>15% off the lane median).
+    # NB: the column keeps the name "lane_dist" for compatibility with the other scripts.
+    lane_med = al.groupby("lane").distance.transform("median")
+    dev = (al.distance / lane_med - 1).abs()
+    al["lane_dist"] = np.where(~(dev <= DIST_OUTLIER), lane_med, al.distance)
     al["ld"] = np.log(al.lane_dist)
     # weight: sign-flipped in ~0.6% of rows -> abs(); NaN -> median (tree handles it, linear layer gets median)
     al["w"] = al.weight.abs()

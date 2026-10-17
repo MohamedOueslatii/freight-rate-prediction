@@ -3,10 +3,10 @@
 Predicts the rate (USD) of freight loads. Trained on Jan-Oct 2025 loads (`data/train_test.csv`), it predicts the 12,000 loads of Nov-Dec 2025 in `data/validation.csv`.
 
 ## Approach in short
-- **Target:** `log(rate / lane distance)`, converted back to dollars.
+- **Target:** `log(rate / distance)` (the load's own distance, or its lane median when clearly wrong), converted back to dollars.
 - **Model (hybrid):** a Huber-linear layer (time trend, log market index, log weight, daily quote level) extrapolates into unseen months; gradient-boosted trees (scikit-learn, L1 loss) learn lane, equipment, distance and quote effects from the residual.
 - **Validation:** time-ordered (forward-chaining) folds: train on the past, test on the next two months. No random split (market_index is mostly a daily factor, so random folds leak day identity) and no month / day-of-year features (Nov-Dec never appears in training).
-- **Results (mean % error on clean rows):** May-Jun 3.0%, Jul-Aug 5.2%, Sep-Oct 2.2%. The final metric is computed by Spotter on labels not available here.
+
 
 ## Data-quality handling
 | Issue | Fix |
@@ -15,7 +15,7 @@ Predicts the rate (USD) of freight loads. Trained on Jan-Oct 2025 loads (`data/t
 | ~0.6% negative `weight` | absolute value |
 | ~0.6% missing `weight` | median in the linear layer; trees handle NaN natively |
 | ~0.8% missing `market_index` | mean of the same day |
-| noisy `distance` | lane median distance |
+| a few wrong `distance` values (47 rows more than 15% off their lane median) | load's own distance kept (price follows it); replaced by the lane median only for those outliers |
 | December chart rows lack coordinates, market_index, quote_signal | coordinates from city lookup; daily means from `validation.csv` (no labels used) |
 
 ## Project structure
@@ -49,3 +49,4 @@ python src/check.py     # optional: sanity checks
 python score.py --predictions validation_predictions.csv --december-predictions data/december_chart_inputs.csv
 ```
 `train.py` overwrites `data/december_chart_inputs.csv` with the predicted rates. `score.py` writes `scorer_results/candidate_december.png`.
+
